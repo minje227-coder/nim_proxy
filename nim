@@ -31,6 +31,8 @@ function start_proxy() {
     docker run -d \
       -p 4000:4000 \
       -e NVIDIA_NIM_API_KEY="$API_KEY" \
+      -e LITELLM_DATABASE_URL="NONE" \
+      -e LITELLM_LOG="INFO" \
       -v "$WIN_CONFIG_PATH:/app/config.yaml" \
       --name $CONTAINER_NAME \
       --restart always \
