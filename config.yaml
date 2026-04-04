@@ -1,18 +1,52 @@
 model_list:
+  # Claude Code에서 가장 자주 타는 메인 슬롯
+  # -> tool calling / JSON 출력 / 긴 작업 흐름 안정성 기준으로 GLM-5 추천
   - model_name: claude-sonnet-4-6
     litellm_params:
-      model: nvidia_nim/qwen/qwen3.5-122b-a10b
-      api_key: os.environ/NVIDIA_NIM_API_KEY
-
-  - model_name: claude-opus-4-6
-    litellm_params:
       model: nvidia_nim/z-ai/glm5
+      # model: nvidia_nim/minimaxai/minimax-m2.5
       api_key: os.environ/NVIDIA_NIM_API_KEY
+      drop_params: true
 
-  - model_name: claude-haiku-4-5
+  # 가장 무거운 상위 슬롯
+  # -> 강한 agentic 성향의 Kimi K2.5 배치
+  - model_name: claude-opus-4-6
     litellm_params:
       model: nvidia_nim/moonshotai/kimi-k2.5
       api_key: os.environ/NVIDIA_NIM_API_KEY
+      drop_params: true
+
+  # 빠른 기본 응답용
+  # -> 완전 초경량은 아니지만 현재 후보 중에선 MiniMax M2.5가 가장 무난
+  - model_name: claude-haiku-4-5
+    litellm_params:
+      model: nvidia_nim/minimaxai/minimax-m2.5
+      api_key: os.environ/NVIDIA_NIM_API_KEY
+      drop_params: true
+
+  # 구형 Claude alias 호환용
+  # -> deprecated R1 대신 strict function calling 가능한 Terminus 사용
+  - model_name: claude-3-5-sonnet
+    litellm_params:
+      model: nvidia_nim/deepseek-ai/deepseek-v3.1-terminus
+      api_key: os.environ/NVIDIA_NIM_API_KEY
+      drop_params: true
+
+  # 다른 Sonnet alias도 메인과 동일하게 맞춤
+  - model_name: claude-3-7-sonnet
+    litellm_params:
+      model: nvidia_nim/z-ai/glm5
+      api_key: os.environ/NVIDIA_NIM_API_KEY
+      drop_params: true
+
+  # 구형 Haiku alias 호환용
+  - model_name: claude-3-5-haiku-20241022
+    litellm_params:
+      model: nvidia_nim/minimaxai/minimax-m2.5
+      api_key: os.environ/NVIDIA_NIM_API_KEY
+      drop_params: true
 
 litellm_settings:
+  # Anthropic/OpenAI 계열 요청 섞일 때 unsupported params로 죽는 것 방지
   drop_params: true
+  set_it_to_none_if_empty: true

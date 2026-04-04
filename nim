@@ -8,10 +8,9 @@ if [ -f .env ]; then
 fi
 
 ACTION=${1:-"start"}
-API_KEY="${NVIDIA_NIM_API_KEY}"
+API_KEY="${NVIDIA_NIM_API_KEY:-$NVIDIA_NIM_API_KEY_1}"
 PROXY_URL="http://localhost:4000"
 CONTAINER_NAME="litellm-nim"
-CONFIG_PATH="$(pwd)/config.yaml"
 
 function start_proxy() {
     echo "[INFO] LiteLLM Docker 컨테이너 시작 중..."
@@ -23,9 +22,15 @@ function start_proxy() {
         docker rm $CONTAINER_NAME >/dev/null 2>&1
     fi
 
-    # Git Bash/MSYS 경로 변환 방지 및 Windows 절대 경로 추출
-    WIN_CONFIG_PATH=$(pwd -W)/config.yaml
-    export MSYS_NO_PATHCONV=1
+    # OS 확인 및 경로 설정 (Windows vs Mac/Linux)
+    if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
+        # Windows (Git Bash/MSYS)
+        FINAL_CONFIG_PATH=$(pwd -W)/config.yaml
+        export MSYS_NO_PATHCONV=1
+    else
+        # Mac / Linux
+        FINAL_CONFIG_PATH="$(pwd)/config.yaml"
+    fi
 
     # Docker 실행
     docker run -d \
@@ -33,7 +38,7 @@ function start_proxy() {
       -e NVIDIA_NIM_API_KEY="$API_KEY" \
       -e LITELLM_DATABASE_URL="NONE" \
       -e LITELLM_LOG="INFO" \
-      -v "$WIN_CONFIG_PATH:/app/config.yaml" \
+      -v "$FINAL_CONFIG_PATH:/app/config.yaml" \
       --name $CONTAINER_NAME \
       --restart always \
       docker.litellm.ai/berriai/litellm:main-stable \
@@ -49,18 +54,38 @@ function start_proxy() {
 }
 
 function run_claude() {
-    echo "[INFO] Claude Code를 NVIDIA NIM 프록시에 연결합니다."
+    # echo "[INFO] Claude Code를 NVIDIA NIM 프록시에 연결합니다."
     
-    export ANTHROPIC_BASE_URL="$PROXY_URL"
-    export ANTHROPIC_API_KEY="sk-litellm-local"
+    # export ANTHROPIC_BASE_URL="$PROXY_URL"
+    # export ANTHROPIC_API_KEY="sk-litellm-local"
+    # export ANTHROPIC_MODEL="claude-sonnet-4-6"
+    # export ANTHROPIC_DEFAULT_OPUS_MODEL="claude-opus-4-6"
+    # export ANTHROPIC_DEFAULT_SONNET_MODEL="claude-sonnet-4-6"
+    # export ANTHROPIC_DEFAULT_HAIKU_MODEL="claude-haiku-4-5"
+
+    # echo "[INFO] claude 실행 중..."
+    # shift # ACTION 인자 제거
+    # claude "$@"
+
+    ensure_proxy_alive
+
+    echo "[INFO] Claude Code를 LiteLLM/NIM 프록시에 연결합니다."
+
+    unset ANTHROPIC_AUTH_TOKEN
+    unset ANTHROPIC_API_URL
+    unset ANTHROPIC_BASE
+
+    export ANTHROPIC_BASE_URL="${PROXY_URL}"
+    export ANTHROPIC_API_KEY="${LITELLM_MASTER_KEY}"
     export ANTHROPIC_MODEL="claude-sonnet-4-6"
     export ANTHROPIC_DEFAULT_OPUS_MODEL="claude-opus-4-6"
     export ANTHROPIC_DEFAULT_SONNET_MODEL="claude-sonnet-4-6"
     export ANTHROPIC_DEFAULT_HAIKU_MODEL="claude-haiku-4-5"
 
-    echo "[INFO] claude 실행 중..."
-    shift # ACTION 인자 제거
-    claude "$@"
+    echo "[DEBUG] ANTHROPIC_BASE_URL=${ANTHROPIC_BASE_URL}"
+    echo "[DEBUG] ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}"
+    shift || true
+    exec claude "$@"
 }
 
 case "$ACTION" in
