@@ -1,9 +1,10 @@
-model_list:
+﻿model_list:
   # Claude Code에서 가장 자주 타는 메인 슬롯
   # -> tool calling / JSON 출력 / 긴 작업 흐름 안정성 기준으로 GLM-5 추천
   - model_name: claude-sonnet-4-6
     litellm_params:
-      model: nvidia_nim/z-ai/glm5
+      model: nvidia_nim/google/gemma-4-31b-it
+      # model: nvidia_nim/z-ai/glm5
       # model: nvidia_nim/minimaxai/minimax-m2.5
       api_key: os.environ/NVIDIA_NIM_API_KEY
       drop_params: true
