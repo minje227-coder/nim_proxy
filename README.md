@@ -1,5 +1,7 @@
 # NIM Proxy for Claude (via LiteLLM)
 
+https://github.com/leeluse/NIM-proxy-for
+
 This proxy is tuned for Claude-style aliases, not Hermes-native model names.
 
 It exposes Claude-compatible model names such as:
